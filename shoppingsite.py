@@ -6,7 +6,7 @@ put melons in a shopping cart.
 Authors: Joel Burton, Christian Fernandez, Meggie Mahnken, Katie Byers.
 """
 
-from flask import Flask, render_template, redirect, flash, session
+from flask import Flask, render_template, redirect, flash, request, session
 import jinja2
 
 import melons
@@ -75,27 +75,28 @@ def add_to_cart(melon_id):
     # - flash a success message
     # - redirect the user to the cart page
 
-    if 'cart' in session:
-        cart= session['cart']
-        cart[melon_id] = cart.get(melon_id, 0) + 1
-        print(cart)
-        flash("Melon was successfully added to cart.")
-        return redirect("/cart")
-    else:
-        session['cart'] = {}
-        cart= session['cart']
-        cart[melon_id] = cart.get(melon_id, 0) + 1
-        return redirect("/cart")
-
-    # if 'cart' not in session:
-    #     session['cart']= {}
-    
-    # if melon_id in session['cart']:
-    #     session['cart'][melon_id]+=1
+    # if 'cart' in session:
+    #     cart= session['cart']
+    #     cart[melon_id] = cart.get(melon_id, 0) + 1
+    #     print(cart)
+    #     flash("Melon was successfully added to cart.")
+    #     return redirect("/cart")
     # else:
-    #     session['cart'][melon_id]=1
-    # flash("Success!")
-    # return redirect('/cart')
+    #     session['cart'] = {}
+    #     cart= session['cart']
+    #     cart[melon_id] = cart.get(melon_id, 0) + 1
+    #     return redirect("/cart")
+    
+
+
+    session.get('cart',{})
+    
+    if melon_id in session['cart']:
+        session['cart'][melon_id]+=1
+    else:
+        session['cart'][melon_id]=1
+    flash("Success!")
+    return redirect('/cart')
         
 
 
@@ -125,9 +126,20 @@ def show_shopping_cart():
     # Make sure your function can also handle the case wherein no cart has
     # been added to the session
 
+    melons_list = []
+    total_cost = 0
+    cart_dict = session.get('cart',0)
+    for melon_id,qty in cart_dict.items():
+        melon = melons.get_by_id(melon_id)
+        melon_price = melon.price * qty
+        melon.total_price = melon_price
+        melon.qty = qty
+        melons_list.append(melon)
+        total_cost += melon_price
+
+    return render_template('cart.html',total_cost=total_cost,melons_list=melons_list)
 
 
-    return render_template("cart.html")
 
 
 @app.route("/login", methods=["GET"])
@@ -159,7 +171,10 @@ def process_login():
     # - if they don't, flash a failure message and redirect back to "/login"
     # - do the same if a Customer with that email doesn't exist
 
-    return "Oops! This needs to be implemented"
+    name = request.form.get('name')
+    password = request.form.get('passowrd')
+
+    pass
 
 
 @app.route("/checkout")
